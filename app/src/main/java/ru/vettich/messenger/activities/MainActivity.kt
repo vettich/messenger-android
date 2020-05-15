@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity(), ChatListAdapter.OnChatListener,
 
         fetchUserInfo()
         fetchChatList()
+        watchChatList()
 
         chat_list_rv.layoutManager = LinearLayoutManager(this)
         chat_list_rv.setHasFixedSize(true)

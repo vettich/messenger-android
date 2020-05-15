@@ -37,8 +37,8 @@ class Api(
     // TODO надо бы вынести это в конфиги
 //    private val httpUrl = "http://m.local.vettich.ru:5008/graphql"
 //    private val wsUrl = "ws://m.local.vettich.ru:5008/graphql"
-    private val httpUrl = "https://288150-ck36157.tmweb.ru/graphql"
-    private val wsUrl = "wss://288150-ck36157.tmweb.ru/graphql"
+    private val httpUrl = "http://288150-ck36157.tmweb.ru:5008/graphql"
+    private val wsUrl = "ws://288150-ck36157.tmweb.ru:5008/graphql"
 
     private val okHttpClient = OkHttpClient().newBuilder()
         .retryOnConnectionFailure(true)
