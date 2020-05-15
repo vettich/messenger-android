@@ -1,6 +1,6 @@
 # messenger-android
 
-Мобильный мессенден в связке с [сервером](https://github.com/vettich/messenger-server) на GraphQL
+Мобильный мессенджер в связке с [сервером на GraphQL](https://github.com/vettich/messenger-server)
 
 ## Основные возможности
 
