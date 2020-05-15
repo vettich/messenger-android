@@ -17,6 +17,10 @@
 
 ## Скриншоты
 
-| Страница авторизации/регистрации | Смена пароля |
-| --- | --- |
-| ![](screenshots/01-login.png) | ![](screenshots/06-change-password.png) |
+Авторизация/регистрация | Меню | Смена пароля
+--- | --- | ---
+![](screenshots/01-login.png) | ![](screenshots/02-drawer.png) | ![](screenshots/06-change-password.png)
+
+Список чатов | Добавление чата | Список сообщений
+--- | --- | ---
+![](screenshots/03-chat-list.png) | ![](screenshots/04-add-chat.png) | ![](screenshots/05-messages.png)
