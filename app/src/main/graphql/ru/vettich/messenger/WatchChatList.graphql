@@ -1,5 +1,5 @@
-query ChatList {
-    chats {
+subscription WatchChatList($token: String!) {
+    watchChatList(token: $token) {
         id
         name
         preview {

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
@@ -15,10 +16,12 @@ import kotlinx.android.synthetic.main.menu_header.*
 import ru.vettich.messenger.Api
 import ru.vettich.messenger.R
 import ru.vettich.messenger.adapters.ChatListAdapter
+import ru.vettich.messenger.dialogs.CreateChatDialog
 import ru.vettich.messenger.models.User
 
 class MainActivity : AppCompatActivity(), ChatListAdapter.OnChatListener,
-    NavigationView.OnNavigationItemSelectedListener {
+    NavigationView.OnNavigationItemSelectedListener,
+    CreateChatDialog.AddListener {
 
     private var chatListAdapter = ChatListAdapter(this)
 
@@ -49,6 +52,8 @@ class MainActivity : AppCompatActivity(), ChatListAdapter.OnChatListener,
         chat_list_rv.layoutManager = LinearLayoutManager(this)
         chat_list_rv.setHasFixedSize(true)
         chat_list_rv.adapter = chatListAdapter
+
+        add_chat_bt.setOnClickListener { openCreateChatDialog() }
     }
 
     private fun fetchUserInfo() {
@@ -66,9 +71,19 @@ class MainActivity : AppCompatActivity(), ChatListAdapter.OnChatListener,
         Api.getInstance(this).getChatList { chats, error ->
             if (error == null) {
                 chatListAdapter.setChatList(chats)
+                if (chats!!.isNotEmpty()) empty_messages_tv.visibility = View.INVISIBLE
                 runOnUiThread { chatListAdapter.notifyDataSetChanged() }
             } else {
                 runOnUiThread { Toast.makeText(this, error, Toast.LENGTH_LONG).show() }
+            }
+        }
+    }
+
+    private fun watchChatList() {
+        Api.getInstance(this).watchChatList { chat, error ->
+            if (error == null) {
+                chatListAdapter.setChat(chat!!)
+                runOnUiThread { chatListAdapter.notifyDataSetChanged() }
             }
         }
     }
@@ -112,5 +127,18 @@ class MainActivity : AppCompatActivity(), ChatListAdapter.OnChatListener,
         intent.putExtra("chat_name", chatName)
         intent.putExtra("user_id", user!!.id)
         startActivity(intent)
+    }
+
+    fun openCreateChatDialog() {
+        val dialog = CreateChatDialog()
+        dialog.show(supportFragmentManager, "example")
+    }
+
+    override fun onAddChat(username: String) {
+        Api.getInstance(this).createChat(username) {error ->
+            if (error != null) {
+                runOnUiThread { Toast.makeText(this, error, Toast.LENGTH_LONG).show() }
+            }
+        }
     }
 }

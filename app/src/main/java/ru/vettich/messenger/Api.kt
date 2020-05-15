@@ -18,6 +18,7 @@ import ru.vettich.messenger.type.MessageInput
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileReader
+import java.util.concurrent.TimeUnit
 
 class Api(
     private val context: Context
@@ -35,16 +36,20 @@ class Api(
 
     private val httpUrl = "http://m.local.vettich.ru:5008/graphql"
     private val wsUrl = "ws://m.local.vettich.ru:5008/graphql"
+//    private val httpUrl = "https://288150-ck36157.tmweb.ru/graphql"
+//    private val wsUrl = "wss://288150-ck36157.tmweb.ru/graphql"
 
-    private val okHttpClient = OkHttpClient().newBuilder().build()
+    private val okHttpClient = OkHttpClient().newBuilder()
+        .retryOnConnectionFailure(true)
+        .pingInterval(30, TimeUnit.SECONDS)
+        .build()
 
     private val apolloClient = ApolloClient.builder()
         .serverUrl(httpUrl)
         .okHttpClient(okHttpClient)
         .build()
 
-    private val apolloClientSubs = ApolloClient
-        .builder()
+    private val apolloClientSubs = ApolloClient.builder()
         .serverUrl(httpUrl)
         .subscriptionTransportFactory(WebSocketSubscriptionTransport.Factory(wsUrl, okHttpClient))
         .build()
@@ -66,7 +71,7 @@ class Api(
         else token = ""
     }
 
-    private fun writeToken(value: String) {
+    private fun saveToken(value: String) {
         token = value
         val out = FileOutputStream(File(context.applicationContext.cacheDir, tokenFilename))
         out.buffered().use { it.write(value.toByteArray()) }
@@ -75,7 +80,7 @@ class Api(
 
     fun isAuth() = token.isNotEmpty()
 
-    fun logout() = writeToken("")
+    fun logout() = saveToken("")
 
     fun login(username: String, password: String, callback: (error: String?) -> Unit) {
         apolloClient
@@ -87,7 +92,7 @@ class Api(
 
                 override fun onResponse(response: Response<LoginMutation.Data>) {
                     response.data?.login?.let {
-                        writeToken(it.value)
+                        saveToken(it.value)
                         callback(null)
                     }
                     response.errors?.let {
@@ -107,7 +112,7 @@ class Api(
 
                 override fun onResponse(response: Response<RegisterMutation.Data>) {
                     response.data?.signup?.let {
-                        writeToken(it.value)
+                        saveToken(it.value)
                         callback(null)
                     }
                     response.errors?.let {
@@ -168,6 +173,30 @@ class Api(
             })
     }
 
+    fun watchChatList(callback: (chat: Chat?, error: String?) -> Unit) {
+        apolloClientSubs
+            .subscribe(WatchChatListSubscription(token))
+            .execute(object :
+                ApolloSubscriptionCall.Callback<WatchChatListSubscription.Data> {
+                override fun onFailure(e: ApolloException) {
+                    callback(null, e.toString())
+                }
+
+                override fun onResponse(response: Response<WatchChatListSubscription.Data>) {
+                    response.data?.watchChatList?.let {
+                        callback(Chat.fromWatchChatList(it), null)
+                    }
+                    response.errors?.let { callback(null, joinErrors(it)) }
+                }
+
+                override fun onConnected() {}
+
+                override fun onTerminated() {}
+
+                override fun onCompleted() {}
+            })
+    }
+
     fun getMessages(
         chatId: String,
         callback: (messages: ArrayList<Message>?, error: String?) -> Unit
@@ -189,39 +218,33 @@ class Api(
 
     fun watchMessages(chatId: String, callback: (msg: Message?, error: String?) -> Unit) {
         apolloClientSubs
-            .subscribe(NewMessagesInChatSubscription(token, chatId))
+            .subscribe(WatchNewMessagesInChatSubscription(token, chatId))
             .execute(object :
-                ApolloSubscriptionCall.Callback<NewMessagesInChatSubscription.Data> {
+                ApolloSubscriptionCall.Callback<WatchNewMessagesInChatSubscription.Data> {
                 override fun onFailure(e: ApolloException) {
-                    Log.d("api", "fail: $e")
                     callback(null, e.toString())
                 }
 
-                override fun onResponse(response: Response<NewMessagesInChatSubscription.Data>) {
-                    Log.d("api", "responsed")
+                override fun onResponse(response: Response<WatchNewMessagesInChatSubscription.Data>) {
                     response.data?.watchNewMessagesInChat?.let {
                         callback(Message.fromWatchMessageInChat(it), null)
                     }
                     response.errors?.let { callback(null, joinErrors(it)) }
                 }
 
-                override fun onConnected() {
-                    Log.d("api", "connected")
-                }
+                override fun onConnected() {}
 
-                override fun onTerminated() {
-                    Log.d("api", "terminated")
-                }
+                override fun onTerminated() {}
 
-                override fun onCompleted() {
-                    Log.d("api", "completed")
-                }
+                override fun onCompleted() {}
             })
     }
 
     fun sendMessage(chatId: String, text: String, callback: (error: String?) -> Unit) {
+        val preparedText = text.trim()
+        if (preparedText.isEmpty()) return
         apolloClient
-            .mutate(SendMessageMutation(MessageInput(text, chatId)))
+            .mutate(SendMessageMutation(MessageInput(preparedText, chatId)))
             .requestHeaders(authHeaders().build())
             .enqueue(object : ApolloCall.Callback<SendMessageMutation.Data>() {
                 override fun onFailure(e: ApolloException) {
@@ -233,7 +256,24 @@ class Api(
                 }
             })
     }
-    
+
+    fun createChat(username: String, callback: (error: String?) -> Unit) {
+        val prepared = username.trim()
+        if (prepared.isEmpty()) return
+        apolloClient
+            .mutate(CreatePersonalChatMutation(prepared))
+            .requestHeaders(authHeaders().build())
+            .enqueue(object : ApolloCall.Callback<CreatePersonalChatMutation.Data>() {
+                override fun onFailure(e: ApolloException) {
+                    callback(e.toString())
+                }
+
+                override fun onResponse(response: Response<CreatePersonalChatMutation.Data>) {
+                    response.errors?.let { callback(joinErrors(it)) }
+                }
+            })
+    }
+
     private fun joinErrors(errors: List<Error>?): String? {
         if (errors == null) return null
         val s = StringBuilder()

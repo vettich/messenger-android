@@ -33,8 +33,15 @@ class ChatListAdapter(
         chatList?.get(position)?.let { holder.bind(it) }
     }
 
-    public fun setChatList(v: ArrayList<Chat>?) {
+    fun setChatList(v: ArrayList<Chat>?) {
         chatList = v
+    }
+
+    fun setChat(chat: Chat) {
+        if (chatList == null) return
+        val idx = chatList!!.indexOfFirst { it.id == chat.id }
+        if (idx == -1) chatList!!.add(chat)
+        else chatList!![idx] = chat
     }
 
     class ViewHolder(itemView: View, private val onChatListener: OnChatListener) :

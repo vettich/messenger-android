@@ -3,6 +3,7 @@ package ru.vettich.messenger.activities
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -45,7 +46,11 @@ class MessagesActivity : AppCompatActivity(), TextView.OnEditorActionListener {
         Api.getInstance(this).getMessages(chatId()) { messages, error ->
             if (error == null) {
                 messagesAdapter.setMessages(messages!!)
-                runOnUiThread { messagesAdapter.notifyDataSetChanged() }
+                if (messages!!.isNotEmpty()) empty_messages_tv.visibility = View.INVISIBLE
+                runOnUiThread {
+                    messagesAdapter.notifyDataSetChanged()
+                    messages_rv.smoothScrollToPosition(messagesAdapter.itemCount)
+                }
             } else {
                 Log.d("messages", error)
             }
@@ -56,7 +61,11 @@ class MessagesActivity : AppCompatActivity(), TextView.OnEditorActionListener {
         Api.getInstance(this).watchMessages(chatId()) { msg, error ->
             if (error == null) {
                 messagesAdapter.addMessage(msg!!)
-                runOnUiThread { messagesAdapter.notifyDataSetChanged() }
+                empty_messages_tv.visibility = View.INVISIBLE
+                runOnUiThread {
+                    messagesAdapter.notifyDataSetChanged()
+                    messages_rv.smoothScrollToPosition(messagesAdapter.itemCount)
+                }
                 Log.d("messages", msg.text)
             } else {
                 Log.d("messages", error)

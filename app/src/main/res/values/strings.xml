@@ -15,4 +15,7 @@
     <string name="change_your_password">Change your password</string>
     <string name="chat_list">Chat list</string>
     <string name="enter_message">Enter message</string>
+    <string name="enter_username">Enter username</string>
+    <string name="empty_chat_list">Add new chat using Plus button</string>
+    <string name="empty_messages">Write your first message in the chat</string>
 </resources>

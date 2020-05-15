@@ -1,8 +1,6 @@
 package ru.vettich.messenger.models
 
-import ru.vettich.messenger.ChatListQuery
-import ru.vettich.messenger.MessagesQuery
-import ru.vettich.messenger.NewMessagesInChatSubscription
+import ru.vettich.messenger.*
 
 data class Message(
     val id: String,
@@ -16,7 +14,12 @@ data class Message(
             return Message("", msg.text, User.fromChatListUser(msg.user), msg.createdAt)
         }
 
-        fun fromWatchMessageInChat(msg: NewMessagesInChatSubscription.WatchNewMessagesInChat?): Message? {
+        fun fromWatchChatList(msg: WatchChatListSubscription.Preview?): Message? {
+            if (msg == null) return null
+            return Message("", msg.text, User.fromWatchChatList(msg.user), msg.createdAt)
+        }
+
+        fun fromWatchMessageInChat(msg: WatchNewMessagesInChatSubscription.WatchNewMessagesInChat?): Message? {
             if (msg == null) return null
             return Message(msg.id, msg.text, User.fromWatchMessagesInChat(msg.user), msg.createdAt)
         }

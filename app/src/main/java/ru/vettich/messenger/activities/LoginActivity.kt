@@ -37,8 +37,8 @@ class LoginActivity : AppCompatActivity() {
     private fun login(username: String, pass: String) {
         Api.getInstance(this).login(username, pass) { error ->
             if (error != null) {
-                showError(error)
                 if (error == "user not found") register(username, pass)
+                else showError(error)
             } else {
                 logged()
             }

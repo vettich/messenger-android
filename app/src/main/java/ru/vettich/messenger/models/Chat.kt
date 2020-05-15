@@ -1,6 +1,7 @@
 package ru.vettich.messenger.models
 
 import ru.vettich.messenger.ChatListQuery
+import ru.vettich.messenger.WatchChatListSubscription
 
 data class Chat(
     val id: String,
@@ -21,6 +22,11 @@ data class Chat(
                 )
             }
             return chats
+        }
+
+        fun fromWatchChatList(chat: WatchChatListSubscription.WatchChatList?): Chat? {
+            if (chat == null) return null
+            return Chat(chat.id, chat.name, Message.fromWatchChatList(chat.preview))
         }
     }
 }
