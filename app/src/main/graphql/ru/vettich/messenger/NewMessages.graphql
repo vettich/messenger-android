@@ -1,0 +1,10 @@
+subscription NewMessagesInChat($token: String!, $chatId: String!) {
+    watchNewMessagesInChat(token: $token, chatId: $chatId) {
+        id
+        text
+        user {
+            username
+        }
+        createdAt
+    }
+}

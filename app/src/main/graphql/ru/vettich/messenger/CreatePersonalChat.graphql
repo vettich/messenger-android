@@ -1,0 +1,5 @@
+mutation CreatePersonalChat($username: String!) {
+    createPersonalChat(username: $username) {
+        id
+    }
+}

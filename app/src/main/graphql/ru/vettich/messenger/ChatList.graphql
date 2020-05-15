@@ -1,0 +1,13 @@
+query ChatList {
+    chats {
+        id
+        name
+        preview {
+            text
+            createdAt
+            user {
+                username
+            }
+        }
+    }
+}

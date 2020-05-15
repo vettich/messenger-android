@@ -1,0 +1,11 @@
+query Messages ($chatId : String!) {
+    messages (chatId : $chatId) {
+        id
+        text
+        user {
+            id
+            username
+        }
+        createdAt
+    }
+}
